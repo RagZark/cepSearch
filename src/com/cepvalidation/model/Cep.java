@@ -1,5 +1,7 @@
 package com.cepvalidation.model;
 
+import com.cepvalidation.exception.ConversionErrorException;
+
 public class Cep {
     private String cep;
     private String localidade;
@@ -7,6 +9,11 @@ public class Cep {
     private String logradouro;
 
     public Cep(InfoCep infoCep){
+
+        if (infoCep.cep() == null || "null".equals(infoCep.cep())){
+            throw new ConversionErrorException("Invalid CEP value, please type a valid CEP.");
+        }
+
         this.cep = infoCep.cep();
         this.logradouro = infoCep.logradouro();
         this.localidade = infoCep.localidade();

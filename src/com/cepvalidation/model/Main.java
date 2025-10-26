@@ -1,12 +1,16 @@
 package com.cepvalidation.model;
 
 import com.cepvalidation.controller.ViaCEPService;
+import com.cepvalidation.exception.ConversionErrorException;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.io.CharConversionException;
 import java.io.IOException;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
@@ -17,26 +21,44 @@ public class Main {
                 .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
                 .setPrettyPrinting()
                 .create();
-        
-        System.out.println("Set your CEP code:");
-        read.nextInt();
+        List<Cep> listCEP = new ArrayList<>();
 
-        String cepCode = read.toString();
+        while (true){
+            System.out.println("Set your CEP code:");
+            String cepCode = read.nextLine();
+            String formatedCepCode = cepCode.replaceAll("[^0-9]", "");
 
-        viaCEPService.setCep(cepCode);
+            if (formatedCepCode.equals("exit")){
+                System.out.println("Exiting...");
+                break;
+            }
 
-        viaCEPService.setRequest();
+            if (formatedCepCode.contains("*.[a-zA-Z].*") || formatedCepCode.length() != 8){
+                System.out.println("Please, set a valid CEP code with 8 numbers.");
+                continue;
+            }
 
-        viaCEPService.setHttpClient();
 
-        viaCEPService.setGetResponse(viaCEPService.getHttpClient().send(viaCEPService.getRequest(), HttpResponse.BodyHandlers.ofString()));
+            try {
+                viaCEPService.setCep(formatedCepCode);
 
-        String json = viaCEPService.getResponse().body();
+                viaCEPService.setRequest();
 
-        InfoCep infoCep = gson.fromJson(json, InfoCep.class);
+                viaCEPService.setHttpClient();
 
-        Cep cep = new Cep(infoCep);
+                viaCEPService.setGetResponse(viaCEPService.getHttpClient().send(viaCEPService.getRequest(), HttpResponse.BodyHandlers.ofString()));
 
-        System.out.println(cep);
+                String json = viaCEPService.getResponse().body();
+
+                InfoCep infoCep = gson.fromJson(json, InfoCep.class);
+
+                Cep cep = new Cep(infoCep);
+
+                System.out.println(cep);
+
+            } catch (ConversionErrorException ex){
+                System.out.println(ex.getMessage());
+            }
+        }
     }
 }
