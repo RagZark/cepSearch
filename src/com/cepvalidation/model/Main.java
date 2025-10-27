@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.CharConversionException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
@@ -16,24 +17,29 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) throws IOException, InterruptedException {
         Scanner read = new Scanner(System.in);
+
         ViaCEPService viaCEPService = new ViaCEPService();
+
         Gson gson = new GsonBuilder()
                 .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
                 .setPrettyPrinting()
                 .create();
+
         List<Cep> listCEP = new ArrayList<>();
 
-        while (true){
+
+        while (true) {
             System.out.println("Set your CEP code:");
             String cepCode = read.nextLine();
-            String formatedCepCode = cepCode.replaceAll("[^0-9]", "");
 
-            if (formatedCepCode.equals("exit")){
+            if (cepCode.equals("exit")) {
                 System.out.println("Exiting...");
                 break;
             }
 
-            if (formatedCepCode.contains("*.[a-zA-Z].*") || formatedCepCode.length() != 8){
+            String formatedCepCode = cepCode.replaceAll("[^0-9]", "");
+
+            if (formatedCepCode.matches(".*[a-zA-Z].*") || formatedCepCode.length() != 8) {
                 System.out.println("Please, set a valid CEP code with 8 numbers.");
                 continue;
             }
@@ -56,9 +62,20 @@ public class Main {
 
                 System.out.println(cep);
 
-            } catch (ConversionErrorException ex){
+                listCEP.add(cep);
+
+                System.out.println("CEP added");
+
+            } catch (ConversionErrorException ex) {
                 System.out.println(ex.getMessage());
             }
         }
+        if (!listCEP.isEmpty()) {
+            System.out.println(listCEP);
+        }
+        FileWriter writer = new FileWriter("ceps.json");
+        writer.write(gson.toJson(listCEP));
+        writer.close();
+        System.out.println("Finish program.");
     }
 }
